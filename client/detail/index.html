@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Chart</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  </head>
+  <body>
+    
+    <div class="w-full h-screen flex items-center justify-center">
+      
+        <div class="upper-form">
+          <div class="space-y-4">
+            <h2 class="text-base/7 font-semibold text-gray-900" id="heading">Data Details </h2>
+    <div id="fieldsContainer">
+       
+        
+      </div>
+
+    </div>
+
+    <div
+      class="chart-container"
+      style="position: relative; height: 40vh; width: 80vw"
+    >
+      <canvas id="chart"></canvas>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+      const ctx = document.getElementById("chart");
+      const data = [];
+      const heading = document.getElementById('heading');
+      const container = document.getElementById('fieldsContainer')
+
+      const queryString = window.location.search;
+      const urlParams = new URLSearchParams(queryString);
+      const id = urlParams.get('id');
+      
+      
+
+      if(id)
+      { 
+        fetch(`http://localhost:8000/api/list-data/detail/${id}`, {
+          method: "get",
+        }).then(async (response) => {
+          if (!response.ok) {
+            throw new Error("Network response was not ok");
+          }
+          return await response.json();
+        })
+        .then((data) => {
+          if(data){
+            heading.innerText += ` (${data.data_table.name})`;
+            const labelsName = [];
+            const labelValues = [];
+            if(data.label_structure){
+              data.label_structure.forEach(label => {
+                if(parseInt(label.label_value)){
+                labelsName.push(label.label_name)
+                labelValues.push(parseInt(label.label_value))
+                }
+                const html = `<div class="flex flex-col gap-2 border p-4 border-gray-200 rounded-lg my-4" id="label-value1">
+          <div>
+            <label for="label[]" class="block text-sm/6 font-medium text-gray-900">Label Name</label>
+            <div class="mt-2">
+              <div class="flex items-center rounded-md bg-white pl-3 outline-1 -outline-offset-1 outline-gray-300 focus-within:outline-2 focus-within:-outline-offset-2 focus-within:outline-indigo-600">
+                <div class="shrink-0 text-base text-gray-500 select-none sm:text-sm/6">Label Name :</div>
+                <input type="text" name="label[]" id="label[]" class="block min-w-0 grow py-1.5 pr-3 pl-1 text-base text-gray-900 placeholder:text-gray-400 focus:outline-none sm:text-sm/6" placeholder="name" value="${label.label_name}">
+              </div>
+            </div>
+          </div>
+          <div>
+            <label for="value[]" class="block text-sm/6 font-medium text-gray-900">Value</label>
+            <div class="mt-2">
+              <div class="flex items-center rounded-md bg-white pl-3 outline-1 -outline-offset-1 outline-gray-300 focus-within:outline-2 focus-within:-outline-offset-2 focus-within:outline-indigo-600">
+                <div class="shrink-0 text-base text-gray-500 select-none sm:text-sm/6">Label Value :</div>
+                <input type="text" name="value[]" id="value[]" class="block min-w-0 grow py-1.5 pr-3 pl-1 text-base text-gray-900 placeholder:text-gray-400 focus:outline-none sm:text-sm/6" placeholder="value" value="${label.label_value}">
+              </div>
+            </div>
+          </div>
+        </div>`;
+            container.innerHTML += html;
+              });
+              const labels = 
+              new Chart(ctx, {
+        type: "bar",
+        data: {
+          labels: labelsName,
+          datasets: [
+            {
+              label: "Graph",
+              data: labelValues,
+              borderWidth: 1,
+            },
+          ],
+        },
+        options: {
+          scales: {
+            y: {
+              beginAtZero: true,
+            },
+          },
+        },
+      });
+            }
+
+          }
+        })
+        .catch((err) => {
+          // alert("Something Went Wrong While fetching data , Please try again later!");
+          console.log(err);
+        });
+      }
+    </script>
+  </body>
+</html>

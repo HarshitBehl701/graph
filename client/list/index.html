@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Chart</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  </head>
+  <body>
+    <h1 class="text-center mt-20 font-bold text-3xl uppercase">
+      List of Data Tables Name
+    </h1>
+    <div class="relative overflow-x-auto w-[90%] mx-auto shadow-md mt-12">
+      <table
+        class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400"
+      >
+        <thead
+          class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400"
+        >
+          <tr>
+            <th scope="col" class="px-6 py-3">Id</th>
+            <th scope="col" class="px-6 py-3">Data Table Name</th>
+            <th scope="col" class="px-6 py-3">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+
+        </tbody>
+      </table>
+    </div>
+    <script>
+      let tablesData = [];
+
+      fetch("http://localhost:8000/api/list-data", {
+        method: "get",
+      })
+        .then(async (response) => {
+          if (!response.ok) {
+            throw new Error("Network response was not ok");
+          }
+          return await response.json();
+        })
+        .then((data) => {
+          tablesData = data.data;
+
+          if(tablesData.length > 0)
+        {
+          const tbody = document.querySelector('tbody');
+
+          tablesData.forEach(data => {
+            tbody.innerHTML += `<tr
+            class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 border-gray-200"
+          >
+            <td class="px-6 py-4">${data.id}</td>
+            <td class="px-6 py-4">${data.name}</td>
+            <td class="px-6 py-4">
+            <button class="rounded-md bg-indigo-600 px-3 py-2 cursor-pointer text-sm font-semibold text-white shadow-xs hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 viewButton" id=${data.id}>View</button>  
+            </td>
+          </tr>`;
+          });
+
+        }
+
+        const viewButtons = document.querySelectorAll('.viewButton');
+
+        if(viewButtons){
+          viewButtons.forEach((elem) => {
+            elem.addEventListener("click",() =>{
+              location.href = `http://127.0.0.1:5500/client/detail/index.html?id=${elem.id}`;
+            })
+          })
+        }
+
+        })
+        .catch((err) => {
+          alert(
+            "Something Went Wrong While fetching data , Please try again later!"
+          );
+          console.log(err);
+        })  
+
+    </script>
+  </body>
+</html>
