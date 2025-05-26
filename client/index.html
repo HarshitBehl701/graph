@@ -92,17 +92,17 @@
       const saveBtn = document.getElementById('saveBtn')
       const form = document.querySelector('form')
 
-      if(addNewLabelBtn){
-        addNewLabelBtn.addEventListener('click',(ev) => {
-          ev.preventDefault();
-          if(labelValueStructure && container){
-            container.innerHTML += labelValueStructure
-          }else{
-            alert('no container or  structure found found')
-          }
+      if (addNewLabelBtn) {
+  addNewLabelBtn.addEventListener('click', (ev) => {
+    ev.preventDefault();
+    if (labelValueStructure && container) {
+      container.insertAdjacentHTML('beforeend', labelValueStructure);
+    } else {
+      alert('No container or structure found');
+    }
+  });
+}
 
-        })
-      }
 
       if(clearFormBtn){
         clearFormBtn.addEventListener('click',(ev) =>{
