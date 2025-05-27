@@ -9,23 +9,14 @@ use App\Models\ValuesStructureModal;
 
 class DataController extends Controller
 {
-    public function getDataTables(Request $request)
+    public function getDataTables()
     {
-         
         try {
-            $data = DataTableModal::all()->where('is_active', 1);
-            if (count($data) > 0) {
-
-                return response([
-                    'data' => $data,
-                    'message' => 'List Found Successfully'
-                ], 200);
-            } else {
-                return response([
-                    'data' => [],
-                    'message' => 'No Data Found'
-                ], 404);
-            }
+            $data = DataTableModal::where('is_active', 1)->get();
+            return response([
+                'data' => $data,
+                'message' => $data->isEmpty() ? 'No Data Found' : 'List Found Successfully'
+            ], $data->isEmpty() ? 404 : 200);
         } catch (\Exception $err) {
             return response([
                 'data' => [],
@@ -34,102 +25,72 @@ class DataController extends Controller
         }
     }
 
-    public function getDataLabels(Request $request,$data_id)
+    public function getDataLabels($data_id)
     {
-
         try {
             $data = DataTableModal::where('is_active', 1)->find($data_id);
-            
-            if ($data) {
-                $labels = LabelStructureModal::where('data_id', $data->id)->where('is_active', 1)->get();
-
-                if (count($labels) == 0) {
-                    return response([
-                        'data' => [],
-                        'message' => 'No Data Found'
-                    ], 404);
-                }
-
-                return response([
-                    'data' => $labels,
-                    'message' => 'List Found Successfully'
-                ], 200);
-            } else {
+            if (!$data) {
                 return response([
                     'data' => [],
                     'message' => 'No Data Found'
                 ], 404);
             }
+
+            $labels = LabelStructureModal::where('data_id', $data->id)
+                ->where('is_active', 1)
+                ->get();
+
+            return response([
+                'data' => $labels,
+                'message' => $labels->isEmpty() ? 'No Labels Found' : 'Labels Found Successfully'
+            ], $labels->isEmpty() ? 404 : 200);
         } catch (\Exception $err) {
             return response([
-                'data' => $err,
+                'data' => [],
                 'message' => 'Internal Server Error'
             ], 500);
         }
     }
 
-    public function getDataLabelsValues(Request $request,$data_id)
+    public function getDataLabelsValues($data_id)
     {
         try {
             $data = DataTableModal::where('is_active', 1)->find($data_id);
-
-            if ($data) {
-                $labels = LabelStructureModal::where('data_id', $data->id)->where('is_active', 1)->get();
-
-                if (count($labels) == 0) {
-                    return response([
-                        'data' => [],
-                        'message' => 'No Data Found'
-                    ], 404);
-                }
-
-                $labelIds = $labels->pluck('id')->toArray();
-
-                $values = ValuesStructureModal::whereIn('label_id', $labelIds)->where('is_active', 1)->get();
-
-                if (count($values) == 0) {
-                    return response([
-                        'data' => [],
-                        'message' => 'No Data Found'
-                    ], 404);
-                }
-
-                $dataArray = [];
-
-                foreach ($labels as $index => $label) {
-                    if (!array_key_exists($label->id, $dataArray)) {
-                        $dataArray[] = [
-                            $label->id => [
-                                'label_name' => $label->label_name,
-                                'values' => []
-                            ]
-                        ];
-                    }
-                }
-
-                foreach ($values as $index => $value) {
-                    if (array_key_exists($value->label_id, $dataArray)) {
-                        $dataArray[$value->label_id]['values'][] = [$value->value];
-                    }
-                }
-
-                if (count($dataArray) == 0) {
-                    return response([
-                        'data' => [],
-                        'message' => 'No Data Found'
-                    ], 404);
-                }
-
-                return response([
-                    'data' => $dataArray,
-                    'message' => 'Data Found Successfully'
-                ], 200);
-            } else {
+            if (!$data) {
                 return response([
                     'data' => [],
                     'message' => 'No Data Found'
                 ], 404);
             }
+
+            $labels = LabelStructureModal::where('data_id', $data->id)
+                ->where('is_active', 1)
+                ->get();
+
+            if ($labels->isEmpty()) {
+                return response([
+                    'data' => [],
+                    'message' => 'No Labels Found'
+                ], 404);
+            }
+
+            $labelIds = $labels->pluck('id');
+            $values = ValuesStructureModal::whereIn('label_id', $labelIds)
+                ->where('is_active', 1)
+                ->get();
+
+            $result = $labels->map(function ($label) use ($values) {
+                return [
+                    'label_id' => $label->id,
+                    'label_name' => $label->label_name,
+                    'values' => $values->where('label_id', $label->id)->pluck('value')
+                ];
+            });
+
+            return response([
+                'data' => $result,
+                'message' => 'Data Found Successfully'
+            ], 200);
         } catch (\Exception $err) {
             return response([
                 'data' => [],
@@ -141,12 +102,11 @@ class DataController extends Controller
     public function createDataTable(Request $request)
     {
         try {
-
             $validatedData = $request->validate([
                 'data_name' => 'required|string|min:2',
-                'labels' => 'required|array',
+                'labels' => 'required|array|min:1',
                 'labels.*.name' => 'required|string|min:2',
-                'labels.*.value' => 'required|in:text,number',
+                'labels.*.type' => 'required|in:text,number',
             ]);
 
             $dataTable = DataTableModal::create([
@@ -154,21 +114,15 @@ class DataController extends Controller
                 'is_active' => 1
             ]);
 
-            if (!$dataTable) {
-                return response([
-                    'data' => [],
-                    'message' => 'Internal Server Error'
-                ], 500);
-            }
-
             $storeLabelData = [];
-
-            foreach ($validatedData['labels'] as $index => $label) {
+            foreach ($validatedData['labels'] as $label) {
                 $storeLabelData[] = [
                     'data_id' => $dataTable->id,
-                    'label_name' => $label->name,
-                    'type' => $label->type,
+                    'label_name' => $label['name'],
+                    'type' => $label['type'],
                     'is_active' => 1,
+                    'created_at' => now(),
+                    'updated_at' => now()
                 ];
             }
 
@@ -179,7 +133,6 @@ class DataController extends Controller
             ], 201);
         } catch (\Exception $err) {
             return response([
-                'data' => [],
                 'message' => 'Internal Server Error'
             ], 500);
         }
@@ -188,67 +141,31 @@ class DataController extends Controller
     public function insertValues(Request $request)
     {
         try {
-
             $validatedData = $request->validate([
-                'data_id' => 'required|string|min:2',
-                'values' => 'required|array',
-                'values.*.label_id' => 'required|string|min:1',
-                'values.*.value' => 'required|in:text,number',
+                'data_id' => 'required|exists:data_table,id',
+                'values' => 'required|array|min:1',
+                'values.*.label_id' => 'required|exists:label_structure,id',
+                'values.*.value' => 'required',
             ]);
 
-            $dataTable = DataTableModal::find($request->data_id)->where('is_active', 1);
-
-            if (!$dataTable) {
-                return response([
-                    'data' => [],
-                    'message' => 'Data Table Not found'
-                ], 404);
-            }
-
-            $labelIds = [];
-
-            foreach($request['values'] as $index => $value)
-            {
-                $labelIds[] = $value->label_id;
-            }
-
-            $labels = LabelStructureModal::whereIn('id', $labelIds)->where('data_id',$dataTable->id)->where('is_active', 1)->get();
-
-            if (!$labels) {
-                return response([
-                    'data' => [],
-                    'message' => 'Labels Not found'
-                ], 404);
-            }
-
-            $labelIds = [];
-
-            foreach($labels as $index => $value)
-            {
-                $labelIds[] = $value->id;
-            }
-
             $storeValues = [];
-
-            foreach ($validatedData['values'] as $index => $value) {
-                if(in_array($value->label_id,$labelIds))
-                {
-                    $storeValues[] = [
-                        'label_id' => $value->label_id,
-                        'value' => $value->value,
-                        'is_active' => 1
-                    ];
-                }
+            foreach ($validatedData['values'] as $value) {
+                $storeValues[] = [
+                    'label_id' => $value['label_id'],
+                    'value' => $value['value'],
+                    'is_active' => 1,
+                    'created_at' => now(),
+                    'updated_at' => now()
+                ];
             }
 
-            LabelStructureModal::insert($storeValues);
+            ValuesStructureModal::insert($storeValues);
 
             return response([
-                'message' => 'Data Created Successfully'
+                'message' => 'Values Added Successfully'
             ], 201);
         } catch (\Exception $err) {
             return response([
-                'data' => [],
                 'message' => 'Internal Server Error'
             ], 500);
         }
@@ -256,29 +173,22 @@ class DataController extends Controller
 
     public function updateData(Request $request)
     {
-        $validatedData  = $request->validate([
-            'id' => 'required|string|min:1',
-            'data_name' => 'string|min:2',
-            'is_active' => 'in:0,1'
-        ]);
         try {
-            $data = DataTableModal::where('is_active', 1)->find($validatedData['id'])->update($validatedData);
+            $validatedData = $request->validate([
+                'id' => 'required|exists:data_table,id',
+                'data_name' => 'sometimes|string|min:2',
+                'is_active' => 'sometimes|in:0,1'
+            ]);
 
-            if ($data) {
+            $data = DataTableModal::where('is_active', 1)
+                ->find($validatedData['id'])
+                ->update($validatedData);
 
-                return response([
-                    'data' => $data,
-                    'message' => 'Data Updated Successfully'
-                ], 200);
-            } else {
-                return response([
-                    'data' => [],
-                    'message' => 'Something Went Wrong While Updating Data Table'
-                ], 500);
-            }
+            return response([
+                'message' => 'Data Updated Successfully'
+            ], 200);
         } catch (\Exception $err) {
             return response([
-                'data' => [],
                 'message' => 'Internal Server Error'
             ], 500);
         }
@@ -286,29 +196,23 @@ class DataController extends Controller
 
     public function updateLabel(Request $request)
     {
-        $validatedData  = $request->validate([
-            'label_id' => 'string|min:2',
-            'label_name' => 'string|min:2',
-            'type' => 'string|in:text,number',
-            'is_active' => 'in:0,1'
-        ]);
         try {
-            $data = LabelStructureModal::where('is_active', 1)->find($validatedData['label_id'])->update($validatedData);
+            $validatedData = $request->validate([
+                'id' => 'required|exists:label_structure,id',
+                'label_name' => 'sometimes|string|min:2',
+                'type' => 'sometimes|in:text,number',
+                'is_active' => 'sometimes|in:0,1'
+            ]);
 
-            if ($data) {
-                return response([
-                    'data' => $data,
-                    'message' => 'Data Updated Successfully'
-                ], 200);
-            } else {
-                return response([
-                    'data' => [],
-                    'message' => 'Something Went Wrong While Updating Data Table'
-                ], 500);
-            }
+            LabelStructureModal::where('is_active', 1)
+                ->find($validatedData['id'])
+                ->update($validatedData);
+
+            return response([
+                'message' => 'Label Updated Successfully'
+            ], 200);
         } catch (\Exception $err) {
             return response([
-                'data' => [],
                 'message' => 'Internal Server Error'
             ], 500);
         }
@@ -316,28 +220,22 @@ class DataController extends Controller
 
     public function updateValue(Request $request)
     {
-        $validatedData  = $request->validate([
-            'value_id' => 'string|min:2',
-            'value' => 'string|min:2',
-            'is_active' => 'in:0,1'
-        ]);
         try {
-            $data = ValuesStructureModal::where('is_active', 1)->find($validatedData['label_id'])->update($validatedData);
+            $validatedData = $request->validate([
+                'id' => 'required|exists:values_structure,id',
+                'value' => 'sometimes|string|min:1',
+                'is_active' => 'sometimes|in:0,1'
+            ]);
 
-            if ($data) {
-                return response([
-                    'data' => $data,
-                    'message' => 'Data Updated Successfully'
-                ], 200);
-            } else {
-                return response([
-                    'data' => [],
-                    'message' => 'Something Went Wrong While Updating Data Table'
-                ], 500);
-            }
+            ValuesStructureModal::where('is_active', 1)
+                ->find($validatedData['id'])
+                ->update($validatedData);
+
+            return response([
+                'message' => 'Value Updated Successfully'
+            ], 200);
         } catch (\Exception $err) {
             return response([
-                'data' => [],
                 'message' => 'Internal Server Error'
             ], 500);
         }
