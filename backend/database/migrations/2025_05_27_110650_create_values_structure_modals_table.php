@@ -11,12 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('label_structure', function (Blueprint $table) {
+        Schema::create('values_structure', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('data_id');
-            $table->foreign('data_id')->references('id')->on('data_table')->onDelete('cascade');
-            $table->string('label_name');
-            $table->enum('type',['text','number'])->default('text');
+            $table->unsignedBigInteger('label_id');
+            $table->foreign('label_id')->references('id')->on('label_structure')->onDelete('cascade');
+            $table->string('value');
             $table->enum('is_active',[0,1])->default(1);
             $table->timestamps();
         });
@@ -27,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('label_structure');
+        Schema::dropIfExists('values_structure');
     }
 };

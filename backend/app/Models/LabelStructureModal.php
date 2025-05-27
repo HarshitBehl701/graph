@@ -7,6 +7,6 @@ use Illuminate\Database\Eloquent\Model;
 class LabelStructureModal extends Model
 {
     protected $fillable  = ['data_id',
-'label_name',
-'label_value','is_active'];
+'label_name','is_active'];
+    protected $table = 'label_structure';
 }

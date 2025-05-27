@@ -11,10 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('data_table_modals', function (Blueprint $table) {
+        Schema::create('data_table', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->integer('is_active')->valid([0,1]);
+            $table->enum('is_active',[0,1])->default(1);
             $table->timestamps();
         });
     }
@@ -24,6 +24,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('data_table_modals');
+        Schema::dropIfExists('data_table');
     }
 };
