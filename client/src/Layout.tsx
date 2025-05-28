@@ -7,7 +7,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       <AppSidebar />
       <main>
         <SidebarTrigger />
-          <div className="main w-[80vw] h-screen">
+          <div className="main md:w-[80vw] w-[95vw] h-screen">
             <div className="children shrink-0 p-10">
               {children}
             </div>

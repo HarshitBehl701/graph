@@ -1,14 +1,12 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useLocation, useSearchParams } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { ToastContainer } from "react-toastify";
-// import ChartComponent from "@/components/my-components/ChartComponent";
 
 function Table() {
   const [searchParams] = useSearchParams();
   const id = searchParams.get("id");
   const location = useLocation();
-  const [,setIsNumValue] = useState(false);
   const {
     data,
     labels,
@@ -17,12 +15,6 @@ function Table() {
     location.state;
 
   const [loading] = useState(false);
-
-  useEffect(() =>{
-    data.forEach(element => {
-      if(parseInt(element.split(':')[1])) setIsNumValue(true);
-    });
-  },[data]);
 
   if (!id) {
     return <p className="text-center text-red-600">No ID specified in URL</p>;
@@ -51,15 +43,6 @@ function Table() {
           </CardContent>
         ))}
       </Card>
-      {/* {isNumValue && data && data.length > 0 && (
-        <ChartComponent
-          xAxisDataKey={table_name}
-          BarDataKey={table_name}
-          data={data.map((value,index) => parseInt(value.split(":")[0]) ? {
-            [labels[index]]: value
-          } : {})}
-        />
-      )} */}
       <ToastContainer />
     </div>
   );

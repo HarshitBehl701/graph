@@ -1,4 +1,5 @@
 import { getDataLabelsValues, updateValue } from "@/api/api_functions";
+import ChartComponent from "@/components/my-components/ChartComponent";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -26,6 +27,7 @@ function Tables() {
   const location = useLocation();
   const { labels } = location.state;
   const [tableData, setTableData] = useState<TablesData[] | null>(null);
+  const [chartData, setChartData] = useState<{ [key: string]: any }[]>();
 
   useEffect(() => {
     if (id) {
@@ -43,23 +45,49 @@ function Tables() {
 
   const [rows, setRows] = useState<string[][]>([]);
   const [isPopupShow, setIsPopupShow] = useState(false);
+
+  const getPreferredXAxisLabel = (labels: TablesData[]) => {
+    const preferredKeys = ["name", "email", "id"];
+    for (const key of preferredKeys) {
+      const found = labels.find((label) =>
+        label.label_name.toLowerCase().includes(key)
+      );
+      if (found) return found.label_name;
+    }
+    return null;
+  };
+
   useEffect(() => {
     if (tableData) {
       const rowCount = tableData[0]?.values.length || 0;
       const newRows: string[][] = [];
+      const xAxisKey = getPreferredXAxisLabel(tableData);
+      const newChartData: { [key: string]: any }[] = [];
 
       for (let i = 0; i < rowCount; i++) {
         const row: string[] = [];
+        const chartRow: { [key: string]: any } = {};
 
         tableData.forEach((labelData) => {
           const valueObj = labelData.values[i];
+          const labelName = labelData.label_name;
+          const value = valueObj?.value;
           row.push(`${valueObj?.id}:${valueObj?.value}`);
+          if (labelName === xAxisKey) {
+            chartRow["name"] = value;
+          } else if (!isNaN(parseFloat(value)) && isFinite(Number(value))) {
+            chartRow[labelName] = Number(value);
+          }
         });
 
         newRows.push(row);
+        if (Object.keys(chartRow).length > 0) {
+          newChartData.push(chartRow);
+        }
       }
 
       setRows(newRows);
+      setChartData(newChartData);
     }
   }, [tableData]);
 
@@ -73,6 +101,8 @@ function Tables() {
       toast.error("Something Went Wrong, Please Try Again Later!");
     }
   };
+
+  console.log(chartData);
 
   return (
     <div>
@@ -116,7 +146,15 @@ function Tables() {
                   <Button
                     className="bg-blue-600 text-white hover:bg-blue-700 cursor-pointer"
                     onClick={() => {
-                      navigate(`/table?id=${id}`,{state:{data:row,labels:labels.map((label: { label_name: any; }) => label.label_name),table_name:name}});
+                      navigate(`/table?id=${id}`, {
+                        state: {
+                          data: row,
+                          labels: labels.map(
+                            (label: { label_name: any }) => label.label_name
+                          ),
+                          table_name: name,
+                        },
+                      });
                     }}
                   >
                     View
@@ -126,6 +164,17 @@ function Tables() {
             ))}
         </TableBody>
       </Table>
+      <br />
+      <br />
+      {chartData && chartData.length > 0 && (
+        <ChartComponent
+          xAxisDataKey="name"
+          BarDataKeys={Object.keys(chartData[0]).filter(
+            (key) => key !== "name"
+          )}
+          data={chartData}
+        />
+      )}
       <ToastContainer />
     </div>
   );
