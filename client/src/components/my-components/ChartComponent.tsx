@@ -1,7 +1,7 @@
 import { BarChart, Bar, ResponsiveContainer, CartesianGrid, Legend, Tooltip, XAxis, YAxis } from "recharts";
 
-function LineChartComponent({xAxisDataKey,BarDataKey,color,data,widthValue,heightValue}:{xAxisDataKey:string;BarDataKey:string,color?:string;data:{[key:string]:any}[];widthValue?:string;heightValue?:number}) {
-
+function ChartComponent({xAxisDataKey,BarDataKey,color,data,widthValue,heightValue}:{xAxisDataKey:string;BarDataKey:string,color?:string;data:{[key:string]:any}[];widthValue?:string;heightValue?:number}) {
+console.log(data)
   return (
       <div style={{ width: widthValue ?? '100%', height: heightValue ?? 300 }}>
       <ResponsiveContainer>
@@ -18,4 +18,4 @@ function LineChartComponent({xAxisDataKey,BarDataKey,color,data,widthValue,heigh
   );
 }
 
-export default LineChartComponent;
+export default ChartComponent;

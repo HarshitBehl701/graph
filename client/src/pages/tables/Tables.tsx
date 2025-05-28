@@ -116,16 +116,7 @@ function Tables() {
                   <Button
                     className="bg-blue-600 text-white hover:bg-blue-700 cursor-pointer"
                     onClick={() => {
-                      const values = row.map((data) => {
-                        const [valueId, value] = data.split(":");
-                        return { id: valueId, value };
-                      });
-
-                      const valuesParam = encodeURIComponent(
-                        JSON.stringify(values)
-                      );
-
-                      navigate(`/table?id=${id}&values=${valuesParam}`);
+                      navigate(`/table?id=${id}`,{state:{data:row,labels:labels.map((label: { label_name: any; }) => label.label_name),table_name:name}});
                     }}
                   >
                     View

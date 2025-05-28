@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { ToastContainer,toast } from "react-toastify";
 import { useSearchParams } from "react-router-dom";
 import { getDataLabels, insertValues } from "@/api/api_functions";
+import Success from "@/components/my-components/Success";
 
 interface Label {
   label_id: number;
@@ -13,9 +14,9 @@ interface Label {
 }
 
 function TableForm() {
-  const [passwordToggle, setPasswordToggle] = useState(false);
   const navigate = useNavigate();
   const [searchParam] = useSearchParams();
+  const [showForm,setShowForm] = useState(true);
   const id = searchParam.get("id");
   const name = searchParam.get("name");
   const [labels, setLabels] = useState<Label[] | null>(null);
@@ -26,21 +27,12 @@ function TableForm() {
         try {
           const response = await getDataLabels(id);
           setLabels(response.data);
-          const object = response.data
-            .map((data: { label_name: any }) => data.label_name)
-            .reduce((obj: { [x: string]: string }, key: string | number) => {
-              obj[key] = "";
-              return obj;
-            }, {});
-          setFormData(object);
         } catch (error) {
           toast.error("Failed to create data table");
         }
       })();
     }
   }, [labels, id]);
-
-  console.log(labels)
 
   const handleFormSubmit = useCallback(
     async (ev: { preventDefault: () => void }) => {
@@ -61,8 +53,9 @@ function TableForm() {
           values: values
         };
         
-        const response = await insertValues(requiredData);
-        toast.success("Successfully Inserted Values");
+        await insertValues(requiredData);
+        setShowForm(false);
+        setFormData({})
       } catch (error) {
         toast.error("Something Went Wrong");
       }
@@ -70,17 +63,20 @@ function TableForm() {
     [formData]
   );
 
+
+  console.log(formData)
+
   return (
     <div className="">
       <div className="header flex items-center mb-20 justify-between flex-wrap gap-5`">
         <h1 className="text-3xl font-semibold">Register {name}</h1>
-        <Button
+        {showForm && <Button
           onClick={() => navigate(`/tables?id=${id}&name=${name}`,{state:{labels:labels}})}
         >
           {name} Tables
-        </Button>
+        </Button>}
       </div>
-      <form
+      {showForm ? <form
         className="mx-auto border border-lg md:w-1/2 w-[80vw] shadow-md p-4 rounded-md"
         onSubmit={handleFormSubmit}
       >
@@ -101,7 +97,7 @@ function TableForm() {
                 placeholder={label.label_name}
                 required
                 name={label.label_name}
-                value={formData[`${label.label_name}/${label.label_id}`]}
+                value={formData[`${label.label_name}/${label.label_id}`] || ""}
                 onChange={(ev) =>
                   setFormData((prev) => ({
                     ...prev,
@@ -116,6 +112,7 @@ function TableForm() {
           type="reset"
           variant={"ghost"}
           className="cursor-pointer hover:underline"
+          onClick={() => setFormData({})}
         >
           Clear
         </Button>
@@ -125,7 +122,7 @@ function TableForm() {
         >
           Submit
         </Button>
-      </form>
+      </form> : <Success isVisible={showForm} setVisible={setShowForm} text="Continue Registering Data" linkText={`Show ${name}`} linkTextLink={`/tables?id=${id}&name=${name}`} linkTextLinkOptionals={{state:{labels:labels}}} />}
       <ToastContainer />
     </div>
   );
