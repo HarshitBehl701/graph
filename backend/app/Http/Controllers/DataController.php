@@ -195,7 +195,6 @@ class DataController extends Controller
                 ];
             }
 
-
             $response = ValuesStructureModal::insert($storeValues);
 
 

@@ -15,7 +15,7 @@ import { ToastContainer, toast } from "react-toastify";
 interface TablesData {
   label_id: number;
   label_name: string;
-  values:  { id: string; value: string }[];
+  values: { id: string; value: string }[];
 }
 
 function Tables() {
@@ -32,7 +32,7 @@ function Tables() {
       (async () => {
         try {
           const response = await getDataLabelsValues(id);
-          console.log(response.data)
+          console.log(response.data);
           setTableData(response.data);
         } catch (error) {
           toast.error("Failed to create data table");
@@ -42,39 +42,37 @@ function Tables() {
   }, [id]);
 
   const [rows, setRows] = useState<string[][]>([]);
-  const [isPopupShow,setIsPopupShow] = useState(false);
+  const [isPopupShow, setIsPopupShow] = useState(false);
   useEffect(() => {
-  if (tableData) {
-    const rowCount = tableData[0]?.values.length || 0;
-    const newRows: string[][] = [];
+    if (tableData) {
+      const rowCount = tableData[0]?.values.length || 0;
+      const newRows: string[][] = [];
 
-    for (let i = 0; i < rowCount; i++) {
-      const row: string[] = [];
+      for (let i = 0; i < rowCount; i++) {
+        const row: string[] = [];
 
-      tableData.forEach((labelData) => {
-        const valueObj = labelData.values[i];
-        row.push(`${valueObj?.id}:${valueObj?.value}`);
-      });
+        tableData.forEach((labelData) => {
+          const valueObj = labelData.values[i];
+          row.push(`${valueObj?.id}:${valueObj?.value}`);
+        });
 
-      newRows.push(row);
+        newRows.push(row);
+      }
+
+      setRows(newRows);
     }
+  }, [tableData]);
 
-    setRows(newRows);
-  }
-}, [tableData]);
-
-
-
-  const handleDeleteRow = async (id:string) => {
+  const handleDeleteRow = async (id: string) => {
     try {
-      await updateValue({id:id,is_active:0})
-      if(isPopupShow == false)toast.success("Successfully Deleted Row");
-      setIsPopupShow(true)
+      await updateValue({ id: id, is_active: 0 });
+      if (isPopupShow == false) toast.success("Successfully Deleted Row");
+      setIsPopupShow(true);
       window.location.reload();
     } catch (error) {
       toast.error("Something Went Wrong, Please Try Again Later!");
     }
-  }
+  };
 
   return (
     <div>
@@ -92,22 +90,49 @@ function Tables() {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {rows && rows.length > 0 && rows.map((row) => <TableRow>
-            {row && row.length > 0 && row.map((data) => <TableCell>{data.split(':')[1]}</TableCell>)}
-            <TableCell className="text-right flex items-center justify-end gap-3">
-              <Button variant={"destructive"} className="cursor-pointer" onClick={() => {
-                row && row.length > 0 && row.map((data) => handleDeleteRow(data.split(':')[0]))
-              }}>
-                Delete
-              </Button>
-              <Button
-                className="bg-blue-600 text-white hover:bg-blue-700 cursor-pointer"
-                onClick={() => navigate(`/table?id=${row && row.length > 0 && row.map((data) => handleDeleteRow(data.split(':')[0]))}`)}
-              >
-                View
-              </Button>
-            </TableCell>
-          </TableRow>)}
+          {rows &&
+            rows.length > 0 &&
+            rows.map((row, rowIndex) => (
+              <TableRow key={rowIndex}>
+                {row &&
+                  row.length > 0 &&
+                  row.map((data, cellIndex) => (
+                    <TableCell key={cellIndex}>{data.split(":")[1]}</TableCell>
+                  ))}
+                <TableCell className="text-right flex items-center justify-end gap-3">
+                  <Button
+                    variant={"destructive"}
+                    className="cursor-pointer"
+                    onClick={() => {
+                      row &&
+                        row.length > 0 &&
+                        row.forEach((data) =>
+                          handleDeleteRow(data.split(":")[0])
+                        );
+                    }}
+                  >
+                    Delete
+                  </Button>
+                  <Button
+                    className="bg-blue-600 text-white hover:bg-blue-700 cursor-pointer"
+                    onClick={() => {
+                      const values = row.map((data) => {
+                        const [valueId, value] = data.split(":");
+                        return { id: valueId, value };
+                      });
+
+                      const valuesParam = encodeURIComponent(
+                        JSON.stringify(values)
+                      );
+
+                      navigate(`/table?id=${id}&values=${valuesParam}`);
+                    }}
+                  >
+                    View
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))}
         </TableBody>
       </Table>
       <ToastContainer />

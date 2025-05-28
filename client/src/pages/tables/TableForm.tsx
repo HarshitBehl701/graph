@@ -6,7 +6,7 @@ import { useSearchParams } from "react-router-dom";
 import { getDataLabels, insertValues } from "@/api/api_functions";
 
 interface Label {
-  id: number;
+  label_id: number;
   is_active: string;
   label_name: string;
   type: "text" | "number";
@@ -40,6 +40,8 @@ function TableForm() {
     }
   }, [labels, id]);
 
+  console.log(labels)
+
   const handleFormSubmit = useCallback(
     async (ev: { preventDefault: () => void }) => {
       ev.preventDefault();
@@ -55,9 +57,10 @@ function TableForm() {
           return [];
         });
         const requiredData = {
-          data_id: "1",
+          data_id: id ?? '1',
           values: values
         };
+        
         const response = await insertValues(requiredData);
         toast.success("Successfully Inserted Values");
       } catch (error) {
@@ -98,11 +101,11 @@ function TableForm() {
                 placeholder={label.label_name}
                 required
                 name={label.label_name}
-                value={formData[`${label.label_name}/${label.id}`]}
+                value={formData[`${label.label_name}/${label.label_id}`]}
                 onChange={(ev) =>
                   setFormData((prev) => ({
                     ...prev,
-                    [`${label.label_name}/${label.id}`]: ev.target.value,
+                    [`${label.label_name}/${label.label_id}`]: ev.target.value,
                   }))
                 }
               />
