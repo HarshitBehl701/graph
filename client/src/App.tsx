@@ -15,6 +15,7 @@ function App() {
   return (
     <Routes>
         <Route path="/" element={<Layout><Home /></Layout>} />
+        <Route path="/create_table" element={<Layout><Home /></Layout>} />
         <Route path="/users_register" element={<Layout><UserForm /></Layout>} />
         <Route path="/users" element={<Layout><Users /></Layout>} />
         <Route path="/user" element={<Layout><User /></Layout>} />

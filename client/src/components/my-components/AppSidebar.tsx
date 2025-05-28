@@ -1,4 +1,4 @@
-import { Banknote, Book,Search, Settings, Users } from "lucide-react"
+import { Banknote, Book,Search, Settings, Table, Users } from "lucide-react"
 
 import {
   Sidebar,
@@ -27,6 +27,11 @@ const items = [
     title: "Salaries",
     url: "/salary_register",
     icon: Banknote,
+  },
+  {
+    title: "Tables",
+    url: "/create_table",
+    icon: Table,
   }
 ]
 
