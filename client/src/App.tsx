@@ -1,30 +1,22 @@
-import { Route, Routes } from "react-router-dom"
+import { Navigate, Route, Routes } from "react-router-dom"
 import Layout from "./Layout"
-import UserForm from "./pages/user/UserForm"
-import Users from "./pages/user/Users"
-import AttendanceForm from "./pages/attendance/AttendanceForm"
-import Attendances from "./pages/attendance/Attendances"
-import SalaryForm from "./pages/salary/SalaryForm"
-import Salaries from "./pages/salary/Salaries"
-import User from "./pages/user/User"
-import Attendance from "./pages/attendance/Attendance"
-import Salary from "./pages/salary/Salary"
-import Home from "./pages/Home"
+import DataTableForm from "./pages/datatables/DataTableForm"
+import DataTables from "./pages/datatables/DataTables"
+import DataTable from "./pages/datatables/DataTable"
+import TableForm from "./pages/tables/TableForm"
+import Tables from "./pages/tables/Tables"
+import Table from "./pages/tables/Table"
 
 function App() {
   return (
     <Routes>
-        <Route path="/" element={<Layout><Home /></Layout>} />
-        <Route path="/create_table" element={<Layout><Home /></Layout>} />
-        <Route path="/users_register" element={<Layout><UserForm /></Layout>} />
-        <Route path="/users" element={<Layout><Users /></Layout>} />
-        <Route path="/user" element={<Layout><User /></Layout>} />
-        <Route path="/attendance_register" element={<Layout><AttendanceForm /></Layout>} />
-        <Route path="/attendances" element={<Layout><Attendances /></Layout>} />
-        <Route path="/attendance" element={<Layout><Attendance /></Layout>} />
-        <Route path="/salary_register" element={<Layout><SalaryForm /></Layout>} />
-        <Route path="/salaries" element={<Layout><Salaries /></Layout>} />
-        <Route path="/salary" element={<Layout><Salary /></Layout>} />
+        <Route path="/" element={<Navigate to={'/create_table'} />} />
+        <Route path="/create_table" element={<Layout><DataTableForm /></Layout>} />
+        <Route path="/data_tables" element={<Layout><DataTables /></Layout>} />
+        <Route path="/data_table" element={<Layout><DataTable /></Layout>} />
+        <Route path="/table_form" element={<Layout><TableForm /></Layout>} />
+        <Route path="/tables" element={<Layout><Tables /></Layout>} />
+        <Route path="/table" element={<Layout><Table /></Layout>} />
     </Routes>
   )
 }

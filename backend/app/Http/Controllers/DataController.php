@@ -40,8 +40,37 @@ class DataController extends Controller
                 ->where('is_active', 1)
                 ->get();
 
+            if ($labels->isEmpty()) {
+                return response([
+                    'data' => [],
+                    'message' => 'No Labels Found'
+                ], 404);
+            }
+
+            $labelIds = $labels->pluck('id');
+            $values = ValuesStructureModal::whereIn('label_id', $labelIds)
+                ->where('is_active', 1)
+                ->get();
+
+            $result = $labels->map(function ($label) use ($values) {
+                $labelValues = $values->where('label_id', $label->id)
+                    ->map(function ($val) {
+                        return [
+                            'id' => $val->id,
+                            'value' => $val->value,
+                        ];
+                    })
+                    ->values();
+
+                return [
+                    'label_id' => $label->id,
+                    'label_name' => $label->label_name,
+                    'values' => $labelValues
+                ];
+            });
+
             return response([
-                'data' => $labels,
+                'data' => $result,
                 'message' => $labels->isEmpty() ? 'No Labels Found' : 'Labels Found Successfully'
             ], $labels->isEmpty() ? 404 : 200);
         } catch (\Exception $err) {
@@ -76,14 +105,23 @@ class DataController extends Controller
 
             $labelIds = $labels->pluck('id');
             $values = ValuesStructureModal::whereIn('label_id', $labelIds)
-                ->where('is_active', 1)
+                ->where('is_active', '1')
                 ->get();
 
             $result = $labels->map(function ($label) use ($values) {
+                $labelValues = $values->where('label_id', $label->id)
+                    ->map(function ($val) {
+                        return [
+                            'id' => $val->id,
+                            'value' => $val->value,
+                        ];
+                    })
+                    ->values(); // reset keys
+
                 return [
                     'label_id' => $label->id,
                     'label_name' => $label->label_name,
-                    'values' => $values->where('label_id', $label->id)->pluck('value')
+                    'values' => $labelValues
                 ];
             });
 
@@ -151,21 +189,23 @@ class DataController extends Controller
             $storeValues = [];
             foreach ($validatedData['values'] as $value) {
                 $storeValues[] = [
-                    'label_id' => $value['label_id'],
+                    'label_id' => (int)$value['label_id'],
                     'value' => $value['value'],
-                    'is_active' => 1,
-                    'created_at' => now(),
-                    'updated_at' => now()
+                    'is_active' => '1'
                 ];
             }
 
-            ValuesStructureModal::insert($storeValues);
+
+            $response = ValuesStructureModal::insert($storeValues);
+
+
 
             return response([
                 'message' => 'Values Added Successfully'
             ], 201);
         } catch (\Exception $err) {
             return response([
+                'err' => $err,
                 'message' => 'Internal Server Error'
             ], 500);
         }
@@ -227,15 +267,27 @@ class DataController extends Controller
                 'is_active' => 'sometimes|in:0,1'
             ]);
 
-            ValuesStructureModal::where('is_active', 1)
-                ->find($validatedData['id'])
-                ->update($validatedData);
+            $fieldKey = $request->has('value') ? 'value' : ($request->has('is_active') ? 'is_active' : null);
+            $fieldValue = $fieldKey ? $validatedData[$fieldKey] : null;
+
+
+            $record = ValuesStructureModal::where('id', $validatedData['id'])
+                ->first();
+
+            if (!$record) {
+                return response([
+                    'message' => 'Record not found or inactive'
+                ], 404);
+            }
+
+            $record->update([$fieldKey => "$fieldValue"]);
 
             return response([
                 'message' => 'Value Updated Successfully'
             ], 200);
         } catch (\Exception $err) {
             return response([
+                'err' => $err,
                 'message' => 'Internal Server Error'
             ], 500);
         }

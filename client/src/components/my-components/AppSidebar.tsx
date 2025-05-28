@@ -1,5 +1,3 @@
-import { Banknote, Book,Search, Settings, Table, Users } from "lucide-react"
-
 import {
   Sidebar,
   SidebarContent,
@@ -10,45 +8,41 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
-
-// Menu items.  
-const items = [
-  {
-    title: "Users",
-    url: "/users_register",
-    icon: Users,
-  },
-  {
-    title: "Attendance",
-    url: "/attendance_register",
-    icon: Book,
-  },
-  {
-    title: "Salaries",
-    url: "/salary_register",
-    icon: Banknote,
-  },
-  {
-    title: "Tables",
-    url: "/create_table",
-    icon: Table,
-  }
-]
+import { useEffect, useState } from "react"
+import { getDataTables } from "@/api/api_functions";
+import {toast,ToastContainer} from "react-toastify";
 
 export function AppSidebar() {
+  const [dataTables, setDataTables] = useState<{id:number;is_active:string;name:string}[] | null>(null);
+
+  useEffect(() => {
+    if(dataTables === null)
+    {
+       (async () => {
+      try {
+        const response = await getDataTables();
+        setDataTables(response.data)
+      } catch (error) {
+        toast.error("Failed to create data table");
+      }
+    })();
+    }
+  }, [dataTables]);
+
   return (
+    <>
+    
     <Sidebar>
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel>Dashboard</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {items.map((item) => (
-                <SidebarMenuItem key={item.title}>
+              {dataTables && dataTables.length > 0 &&  dataTables.map((table) => (
+                <SidebarMenuItem key={table.id}>
                   <SidebarMenuButton asChild>
-                    <a href={item.url}>
-                      <item.icon />
-                      <span>{item.title}</span>
+                    <a href={`/table_form?id=${table.id}&name=${table.name}`}>
+                      <span>{table.name}</span>
                     </a>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -58,5 +52,7 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
     </Sidebar>
+    <ToastContainer />
+    </>
   )
 }

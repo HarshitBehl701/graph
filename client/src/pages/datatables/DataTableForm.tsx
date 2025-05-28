@@ -3,12 +3,15 @@ import { Plus, Trash2 } from "lucide-react";
 import { useCallback, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ToastContainer, toast } from 'react-toastify';
-import { createDataTable } from "@/api_helpers";
+import { createDataTable, type Label } from "@/api/api_functions";
 
-function DataTableForm() {
+function  DataTableForm() {
     const [formData, setFormData] = useState({
         data_name: '',
         labels: [{ name: '', type: 'text' }]
+    } as {
+        data_name: string;
+        labels: Label[];
     });
     const navigate = useNavigate();
 
@@ -54,7 +57,7 @@ function DataTableForm() {
         <div className="">
             <div className="header flex items-center mb-20 justify-between flex-wrap gap-5">
                 <h1 className="text-3xl font-semibold">Create Data Table</h1>
-                <Button onClick={() => navigate('/data-tables')}>View Data Tables</Button>
+                <Button onClick={() => navigate('/data_tables')}>View Data Tables</Button>
             </div>
             <form className="mx-auto border border-lg md:w-1/2 w-[80vw] shadow-md p-4 rounded-md" onSubmit={handleFormSubmit}>
                 <div className="mb-5">

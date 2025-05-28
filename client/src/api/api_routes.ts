@@ -1,4 +1,4 @@
-const baseUrl = import.meta.env.BASE_API_URL ?? 'http://127.0.0.1:8000/api/';
+const baseUrl = import.meta.env.BASE_API_URL ?? 'http://127.0.0.1:8000/api';
 
 export const api_routes = {
     get_data_tables: `${baseUrl}/get_data_tables`,
